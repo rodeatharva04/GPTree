@@ -24,6 +24,7 @@ class EmailVerification(models.Model):
 
 class Conversation(models.Model):
     title = models.CharField(max_length=255, default="New Chat")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='conversations', null=True, blank=True)
     parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='children')
     created_at = models.DateTimeField(auto_now_add=True)
 

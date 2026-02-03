@@ -11,15 +11,18 @@ import json
 import os
 import requests
 from PIL import Image
-from google import genai
-from google.genai import types
 import threading
-
-# Initialize Gemini
-api_key = getattr(settings, 'GOOGLE_API_KEY', None) or os.environ.get("GOOGLE_API_KEY")
-client = None
-if api_key:
-    client = genai.Client(api_key=api_key)
+try:
+    from google import genai
+    from google.genai import types
+    # Initialize Gemini
+    api_key = getattr(settings, 'GOOGLE_API_KEY', None) or os.environ.get("GOOGLE_API_KEY")
+    client = None
+    if api_key:
+        client = genai.Client(api_key=api_key)
+except ImportError:
+    print("Google GenAI SDK not found or failed to import.")
+    client = None
 
 def send_brevo_email(subject, content, to_email):
     """Fallback to HTTP API since SMTP is failing with 535"""
@@ -214,11 +217,13 @@ def logout_view(request):
     logout(request)
     return JsonResponse({'status': 'ok'})
 
+@login_required
 def get_tree(request):
-    nodes = Conversation.objects.all().values('id', 'title', 'parent_id', 'created_at').order_by('created_at')
+    nodes = Conversation.objects.filter(user=request.user).values('id', 'title', 'parent_id', 'created_at').order_by('created_at')
     return JsonResponse(list(nodes), safe=False)
 
 @csrf_exempt
+@login_required
 def create_conversation(request):
     if request.method == 'POST':
         data = json.loads(request.body)
@@ -226,14 +231,16 @@ def create_conversation(request):
         title = data.get('title', 'New Chat')
         parent = None
         if parent_id:
-            parent = Conversation.objects.get(id=parent_id)
-        conv = Conversation.objects.create(title=title, parent=parent)
+            # Ensure parent belongs to user
+            parent = get_object_or_404(Conversation, id=parent_id, user=request.user)
+        conv = Conversation.objects.create(title=title, parent=parent, user=request.user)
         return JsonResponse({'id': conv.id, 'title': conv.title, 'parent_id': conv.parent_id})
     return JsonResponse({'error': 'Invalid method'}, status=405)
 
 @csrf_exempt
+@login_required
 def update_conversation(request, conversation_id):
-    conv = get_object_or_404(Conversation, id=conversation_id)
+    conv = get_object_or_404(Conversation, id=conversation_id, user=request.user)
     if request.method == 'PUT':
         data = json.loads(request.body)
         conv.title = data.get('title', conv.title)
@@ -246,9 +253,10 @@ def update_conversation(request, conversation_id):
 
 from .models import Conversation, Message, MessageFile
 
+@login_required
 def get_messages(request, conversation_id):
     messages = []
-    current = get_object_or_404(Conversation, id=conversation_id)
+    current = get_object_or_404(Conversation, id=conversation_id, user=request.user)
     
     path = []
     while current:
@@ -274,9 +282,10 @@ def get_messages(request, conversation_id):
     return JsonResponse(messages, safe=False)
 
 @csrf_exempt
+@login_required
 def add_message(request, conversation_id):
     if request.method == 'POST':
-        conv = get_object_or_404(Conversation, id=conversation_id)
+        conv = get_object_or_404(Conversation, id=conversation_id, user=request.user)
         
         if request.content_type.startswith('multipart/form-data'):
             role = request.POST.get('role', 'user')
@@ -303,6 +312,7 @@ def add_message(request, conversation_id):
     return JsonResponse({'error': 'Invalid method'}, status=405)
 
 @csrf_exempt
+@login_required
 def generate_reply(request, conversation_id):
     """
     Generates AI reply using Gemini, with context aware of the tree path.
@@ -311,17 +321,17 @@ def generate_reply(request, conversation_id):
     if request.method != 'POST':
         return JsonResponse({'error': 'Invalid method'}, status=405)
 
-    if not api_key:
-         conv = get_object_or_404(Conversation, id=conversation_id)
+    if not api_key or not client:
+         conv = get_object_or_404(Conversation, id=conversation_id, user=request.user)
          Message.objects.create(
              conversation=conv,
              role='ai',
-             content="I am ready to help! Please set your GOOGLE_API_KEY in the environment."
+             content="I am ready to help! Please set your GOOGLE_API_KEY in the environment or ensure the SDK is installed."
          )
          return JsonResponse({'status': 'ok'})
 
     try:
-        conv = get_object_or_404(Conversation, id=conversation_id)
+        conv = get_object_or_404(Conversation, id=conversation_id, user=request.user)
         
         path = []
         current = conv
