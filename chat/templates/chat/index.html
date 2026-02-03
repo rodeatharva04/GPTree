@@ -315,7 +315,6 @@
         .history-pane {
             flex: 1;
             overflow-y: auto;
-            scroll-behavior: smooth;
             padding: 0;
             /* Removed top/bottom padding */
             position: relative;
@@ -1179,8 +1178,6 @@
             const activeEl = document.getElementById(`node-${id}`);
             if (activeEl) {
                 activeEl.classList.add('active');
-                // Removed smooth scroll jump - it stays there now
-                activeEl.scrollIntoView({ block: 'nearest' });
             }
 
             const inner = document.getElementById('chat-inner');
@@ -1253,21 +1250,19 @@
                     });
                 }
 
-                // Scroll handling
-                setTimeout(() => {
-                    const cPane = document.getElementById('current-pane');
-                    const pPane = document.getElementById('parent-pane');
+                // Scroll handling - Instant (No delay)
+                const cPaneInstant = document.getElementById('current-pane');
+                const pPaneInstant = document.getElementById('parent-pane');
 
-                    if (scrollPositions[id] !== undefined) {
-                        cPane.scrollTop = scrollPositions[id];
-                    } else {
-                        cPane.scrollTop = cPane.scrollHeight;
-                    }
+                if (scrollPositions[id] !== undefined) {
+                    cPaneInstant.scrollTop = scrollPositions[id];
+                } else {
+                    cPaneInstant.scrollTop = cPaneInstant.scrollHeight;
+                }
 
-                    if (showContext) {
-                        pPane.scrollTop = pPane.scrollHeight;
-                    }
-                }, 50);
+                if (showContext) {
+                    pPaneInstant.scrollTop = pPaneInstant.scrollHeight;
+                }
 
             } catch (e) {
                 console.error(e);
