@@ -13,6 +13,7 @@ import requests
 from PIL import Image
 from google import genai
 from google.genai import types
+import threading
 
 # Initialize Gemini
 api_key = getattr(settings, 'GOOGLE_API_KEY', None) or os.environ.get("GOOGLE_API_KEY")
@@ -78,15 +79,17 @@ def register_view(request):
             verification = EmailVerification.objects.create(user=user)
 
         otp = verification.generate_otp()
+        
+        # Send Email in background thread
+        def send_async():
+            if not send_brevo_email(
+                'GPTree - Verify your Email',
+                f'Your OTP for email verification is: {otp}',
+                email
+            ):
+                print(f"Email delivery failed for {email}")
 
-        # Send Email
-        success = send_brevo_email(
-            'GPTree - Verify your Email',
-            f'Your OTP for email verification is: {otp}',
-            email
-        )
-        if not success:
-            print(f"Email delivery failed for {email}")
+        threading.Thread(target=send_async).start()
 
         return JsonResponse({'status': 'ok', 'user_id': user.id})
     return render(request, 'chat/register.html')
@@ -143,15 +146,16 @@ def forgot_password(request):
         if user:
             verification, _ = EmailVerification.objects.get_or_create(user=user)
             otp = verification.generate_otp()
-            success = send_brevo_email(
-                'GPTree - Password Reset OTP',
-                f'Your OTP for password reset is: {otp}',
-                email
-            )
-            if success:
-                return JsonResponse({'status': 'ok', 'user_id': user.id})
-            else:
-                return JsonResponse({'error': 'Failed to send reset email'}, status=500)
+            
+            def send_async():
+                send_brevo_email(
+                    'GPTree - Password Reset OTP',
+                    f'Your OTP for password reset is: {otp}',
+                    email
+                )
+            
+            threading.Thread(target=send_async).start()
+            return JsonResponse({'status': 'ok', 'user_id': user.id})
         return JsonResponse({'error': 'Email not found'}, status=404)
     return JsonResponse({'error': 'Method not allowed'}, status=405)
 
