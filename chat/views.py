@@ -24,15 +24,53 @@ except ImportError:
     print("Google GenAI SDK not found or failed to import.")
     client = None
 
-def send_brevo_email(subject, content, to_email):
+def get_email_html(title, content, warning=None):
+    warning_html = ""
+    if warning:
+        warning_html = f"""
+        <div style="background-color: #1e1e1e; border-left: 4px solid #ff4a4a; padding: 10px; margin: 20px 0; color: #ff4a4a;">
+            <strong>SECURITY ALERT:</strong><br>
+            {warning}
+        </div>
+        """
+    
+    return f"""
+    <!DOCTYPE html>
+    <html>
+    <body style="margin: 0; padding: 0; background-color: #121212; color: #e0e0e0; font-family: 'Courier New', Courier, monospace;">
+        <div style="max-width: 600px; margin: 0 auto; padding: 20px; background-color: #121212;">
+            <div style="border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                <div style="width: 30px; height: 30px; background-color: #20b8cd; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: black; font-weight: bold;">G</div>
+                <h2 style="color: #e0e0e0; margin: 0; font-size: 18px;">GPTree System</h2>
+            </div>
+            
+            <div style="font-size: 14px; line-height: 1.6;">
+                <p style="color: #20b8cd; font-weight: bold; font-size: 16px;">{title}</p>
+                <div style="background-color: #1a1a1a; padding: 15px; border-radius: 4px; border: 1px solid #333;">
+                    {content}
+                </div>
+                {warning_html}
+            </div>
+            
+            <div style="font-size: 11px; color: #666; border-top: 1px solid #333; padding-top: 15px; margin-top: 30px;">
+                This represents an automated security notification from GPTree.<br>
+                Device: Unknown via Web Client<br>
+                Time: {threading.Event().wait(0)} (Just now)
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+
+def send_brevo_email(subject, html_content, to_email):
     """Fallback to HTTP API since SMTP is failing with 535"""
     api_key = getattr(settings, 'EMAIL_HOST_PASSWORD', '')
     url = "https://api.brevo.com/v3/smtp/email"
     payload = {
-        "sender": {"name": "GPTree", "email": settings.DEFAULT_FROM_EMAIL},
+        "sender": {"name": "GPTree Security", "email": settings.DEFAULT_FROM_EMAIL},
         "to": [{"email": to_email}],
         "subject": subject,
-        "textContent": content
+        "htmlContent": html_content
     }
     headers = {
         "accept": "application/json",
@@ -85,9 +123,14 @@ def register_view(request):
         
         # Send Email in background thread
         def send_async():
+            html_body = get_email_html(
+                "Verify Your Identity",
+                f"A request was made to register a new account.<br><br>Your verification OTP is: <strong style='font-size: 1.2em; color: #fff;'>{otp}</strong>",
+                "If you did not initiate this request, someone may be trying to use your email address. No action is required."
+            )
             if not send_brevo_email(
-                'GPTree - Verify your Email',
-                f'Your OTP for email verification is: {otp}',
+                'Security Alert: Verify your Email',
+                html_body,
                 email
             ):
                 print(f"Email delivery failed for {email}")
@@ -151,9 +194,14 @@ def forgot_password(request):
             otp = verification.generate_otp()
             
             def send_async():
+                html_body = get_email_html(
+                    "Password Reset Required",
+                    f"A password reset was requested for your account.<br><br>Your OTP is: <strong style='font-size: 1.2em; color: #fff;'>{otp}</strong>",
+                    "If you did not request a password reset, your account credentials may be compromised. Please secure your account immediately."
+                )
                 send_brevo_email(
-                    'GPTree - Password Reset OTP',
-                    f'Your OTP for password reset is: {otp}',
+                    'Security Alert: Password Reset Request',
+                    html_body,
                     email
                 )
             
