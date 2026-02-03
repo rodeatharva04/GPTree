@@ -753,9 +753,9 @@
                         style="width:32px; height:32px; border-radius:50%; object-fit: cover; display: none;">
                     <div id="sidebar-avatar-placeholder"
                         style="width:32px; height:32px; background:var(--accent); border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-weight:600;">
-                        {{ user.username|slice:":1"|upper }}
+                        {{ user.email|slice:":1"|upper }}
                     </div>
-                    <span>{{ user.username }}</span>
+                    <span>{{ user.email }}</span>
                 </div>
             </div>
         </aside>
@@ -1439,7 +1439,7 @@
                 if (data.profile_pic) {
                     avatar.src = data.profile_pic;
                 } else {
-                    avatar.src = 'https://ui-avatars.com/api/?name=' + data.username + '&background=20b8cd&color=fff';
+                    avatar.src = 'https://ui-avatars.com/api/?name=' + data.email + '&background=20b8cd&color=fff';
                 }
 
                 document.getElementById('settings-modal').style.display = 'flex';

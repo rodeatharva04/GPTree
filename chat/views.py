@@ -176,7 +176,7 @@ def reset_password(request):
 def get_user_settings(request):
     profile, _ = UserProfile.objects.get_or_create(user=request.user)
     return JsonResponse({
-        'username': request.user.username,
+        'email': request.user.email,
         'full_name': profile.full_name,
         'profile_pic': profile.profile_pic.url if profile.profile_pic else None,
         'personal_prompt': profile.personal_prompt
