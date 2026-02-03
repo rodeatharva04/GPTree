@@ -381,8 +381,10 @@
         }
 
         .message-group {
-            max-width: 85%;
-            padding: 12px 16px;
+            max-width: 800px;
+            /* reduced from 85% for compactness */
+            padding: 8px 12px;
+            /* reduced padding */
             border: 1px solid transparent;
             transition: all 0.2s;
             position: relative;
@@ -561,6 +563,10 @@
         .message-text {
             white-space: pre-wrap;
             color: #d1d5db;
+            line-height: 1.5;
+            /* slightly reduced from default */
+            font-size: 0.95em;
+            /* slightly smaller text */
         }
 
         /* Input Area */
