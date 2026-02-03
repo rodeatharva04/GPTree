@@ -128,7 +128,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "AIzaSyCSLCxxXo-lms8I56vtcQBCnNy3tFY7__4")
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "AIzaSyA1i5IMdoBuIqO_ppukFQ-GbHUO8EIxWSQ")
 
 # Email Settings
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
