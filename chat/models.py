@@ -6,15 +6,6 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     full_name = models.CharField(max_length=255, blank=True)
     profile_pic = models.ImageField(upload_to='profile_pics/', blank=True, null=True)
-    TIER_CHOICES = (
-        ('free', 'Free'),
-        ('plus', 'Plus'),
-        ('pro', 'Pro'),
-    )
-    subscription_tier = models.CharField(max_length=10, choices=TIER_CHOICES, default='free')
-    stripe_customer_id = models.CharField(max_length=255, blank=True, null=True)
-    stripe_subscription_id = models.CharField(max_length=255, blank=True, null=True)
-    subscription_status = models.CharField(max_length=50, default='inactive')
     personal_prompt = models.TextField(blank=True, help_text="Custom instructions for the AI")
 
     def __str__(self):

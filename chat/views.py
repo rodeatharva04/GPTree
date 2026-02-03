@@ -54,6 +54,9 @@ def register_view(request):
         email = data.get('email')
         password = data.get('password')
 
+        if len(password) < 7:
+            return JsonResponse({'error': 'Password must be at least 7 characters long'}, status=400)
+
         existing_user = User.objects.filter(username=username).first()
         if existing_user:
             if existing_user.is_active:
@@ -176,8 +179,7 @@ def get_user_settings(request):
         'username': request.user.username,
         'full_name': profile.full_name,
         'profile_pic': profile.profile_pic.url if profile.profile_pic else None,
-        'personal_prompt': profile.personal_prompt,
-        'subscription_tier': profile.subscription_tier
+        'personal_prompt': profile.personal_prompt
     })
 
 @login_required
@@ -199,38 +201,6 @@ def update_user_settings(request):
         
         profile.save()
         return JsonResponse({'status': 'ok'})
-@csrf_exempt
-def bmac_webhook(request):
-    """
-    Buy Me A Coffee Webhook Handler
-    Updates user tier based on email matching.
-    """
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            # BMC often nests data under 'response'
-            res = data.get('response', data)
-            email = res.get('payer_email') or res.get('email')
-            
-            if not email:
-                # Debug logging if needed
-                print(f"BMAC Webhook received but no email found in: {data}")
-                return JsonResponse({'error': 'No email found'}, status=400)
-
-            user = User.objects.filter(email=email).first()
-            if user:
-                profile = user.profile
-                # For now, any successful payment upgrades to 'plus'
-                # You can extend this to check 'plan_id' or 'amount' for 'pro'
-                profile.subscription_tier = 'plus'
-                profile.subscription_status = 'active'
-                profile.save()
-                return JsonResponse({'status': 'upgraded'})
-            
-            return JsonResponse({'status': 'user_not_found'})
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)
-    return JsonResponse({'error': 'POST required'}, status=405)
 
 @csrf_exempt
 def logout_view(request):

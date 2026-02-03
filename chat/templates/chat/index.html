@@ -61,6 +61,58 @@
             margin-right: -2px;
         }
 
+        @media screen and (max-width: 768px) {
+            #sidebar {
+                position: fixed;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                z-index: 1000;
+                width: 280px !important;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            #sidebar.mobile-open {
+                transform: translateX(0);
+            }
+
+            #resizer {
+                display: none;
+            }
+
+            .sidebar-overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 999;
+            }
+
+            .sidebar-overlay.active {
+                display: block;
+            }
+
+            #main {
+                width: 100% !important;
+            }
+
+            .input-area {
+                padding: 10px;
+            }
+
+            .input-wrapper {
+                max-width: 100% !important;
+            }
+
+            .menu-toggle {
+                display: block !important;
+            }
+        }
+
         #resizer:hover,
         #resizer.active {
             background: var(--accent);
@@ -565,6 +617,8 @@
 
 <body>
     <div id="app">
+        <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+        <!-- Sidebar -->
         <aside id="sidebar">
             <div class="sidebar-header">
                 <span class="logo"><i class="fa fa-sitemap"
@@ -594,10 +648,9 @@
                 <div class="modal-header"
                     style="border-bottom: 1px solid var(--border); padding-bottom: 15px; margin-bottom: 20px;">
                     <div style="display:flex; gap:30px;">
-                        <span id="tab-profile-btn" onclick="switchTab('profile')"
-                            style="font-size: 1em; font-weight:600; color: var(--accent); cursor:pointer; padding-bottom:10px; border-bottom: 2px solid var(--accent); transition: all 0.2s;">Profile</span>
-                        <span id="tab-sub-btn" onclick="switchTab('sub')"
-                            style="font-size: 1em; font-weight:600; color: var(--text-muted); cursor:pointer; padding-bottom:10px; border-bottom: 2px solid transparent; transition: all 0.2s;">Subscription</span>
+                        <span id="tab-profile-btn"
+                            style="font-size: 1.1em; font-weight:600; color: var(--accent); padding-bottom:10px; border-bottom: 2px solid var(--accent);">Account
+                            Settings</span>
                     </div>
                     <button onclick="closeSettings()" class="action-btn" style="padding:0; margin-top:-10px;"><i
                             class="fa fa-times" style="font-size:1.2em;"></i></button>
@@ -638,56 +691,15 @@
                     </div>
                 </div>
 
-                <!-- Subscription Tab -->
-                <div id="tab-sub-content" style="display:none;">
-                    <div style="text-align:center; margin-bottom: 20px;">
-                        <div id="current-tier-badge"
-                            style="display:inline-block; padding:4px 12px; border-radius:20px; background:var(--bg-active); color:var(--accent); font-size:0.8em; font-weight:600; margin-bottom:10px; text-transform: uppercase;">
-                            CURRENT PLAN: FREE
-                        </div>
-                        <p style="color:var(--text-muted); font-size:0.85em; margin:0;">Automated upgrades via Buy Me A
-                            Coffee</p>
-                    </div>
-
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
-                        <!-- Plus Card -->
-                        <div
-                            style="background:#2A2B32; border:1px solid var(--border); border-radius:12px; padding:20px;">
-                            <h3 style="margin:0 0 10px 0; color:var(--accent); font-size:1.1em;">Plus</h3>
-                            <div style="font-size:1.5em; font-weight:700; margin-bottom:15px;">$5<span
-                                    style="font-size:0.5em; color:var(--text-muted); font-weight:400;">/mo</span></div>
-                            <ul
-                                style="padding:0; list-style:none; font-size:0.8em; color:var(--text-muted); line-height:1.6; margin-bottom:20px;">
-                                <li><i class="fa fa-check" style="color:var(--accent);"></i> Unlimited Branches</li>
-                                <li><i class="fa fa-check" style="color:var(--accent);"></i> No Usage Limits</li>
-                            </ul>
-                            <button onclick="window.open('https://buymeacoffee.com/rodeatharva')"
-                                style="width:100%; padding:10px; background:var(--accent); border:none; border-radius:8px; color:white; font-weight:600; cursor:pointer; font-size:0.85em;">Join
-                                Plus</button>
-                        </div>
-
-                        <!-- Pro Card -->
-                        <div
-                            style="background:#2A2B32; border:1px solid var(--accent); border-radius:12px; padding:20px;">
-                            <h3 style="margin:0 0 10px 0; color:var(--accent); font-size:1.1em;">Pro</h3>
-                            <div style="font-size:1.5em; font-weight:700; margin-bottom:15px;">$15<span
-                                    style="font-size:0.5em; color:var(--text-muted); font-weight:400;">/mo</span></div>
-                            <ul
-                                style="padding:0; list-style:none; font-size:0.8em; color:var(--text-muted); line-height:1.6; margin-bottom:20px;">
-                                <li><i class="fa fa-check" style="color:var(--accent);"></i> Elite AI Model</li>
-                                <li><i class="fa fa-check" style="color:var(--accent);"></i> Priority Server</li>
-                            </ul>
-                            <button onclick="window.open('https://buymeacoffee.com/rodeatharva')"
-                                style="width:100%; padding:10px; background:var(--accent); border:none; border-radius:8px; color:white; font-weight:600; cursor:pointer; font-size:0.85em;">Go
-                                Pro</button>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
 
         <main id="main">
             <div id="chat-header">
+                <button class="action-btn menu-toggle" onclick="toggleSidebar()"
+                    style="display:none; font-size:1.2em; padding:10px;">
+                    <i class="fa fa-bars"></i>
+                </button>
                 <div id="chat-breadcrumb">
                     <span style="opacity: 0.5;">Select a chat to see path...</span>
                 </div>
@@ -1234,9 +1246,7 @@
                     avatar.src = 'https://ui-avatars.com/api/?name=' + data.username + '&background=20b8cd&color=fff';
                 }
 
-                document.getElementById('current-tier-badge').innerText = 'CURRENT PLAN: ' + (data.subscription_tier || 'FREE');
                 document.getElementById('settings-modal').style.display = 'flex';
-                switchTab('profile'); // Reset to profile tab when opening
             } catch (e) {
                 console.error("Failed to load settings", e);
             }
@@ -1257,27 +1267,11 @@
             }
         }
 
-        function switchTab(tab) {
-            const profileTab = document.getElementById('tab-profile-content');
-            const subTab = document.getElementById('tab-sub-content');
-            const profileBtn = document.getElementById('tab-profile-btn');
-            const subBtn = document.getElementById('tab-sub-btn');
-
-            if (tab === 'profile') {
-                profileTab.style.display = 'block';
-                subTab.style.display = 'none';
-                profileBtn.style.color = 'var(--accent)';
-                profileBtn.style.borderBottomColor = 'var(--accent)';
-                subBtn.style.color = 'var(--text-muted)';
-                subBtn.style.borderBottomColor = 'transparent';
-            } else {
-                profileTab.style.display = 'none';
-                subTab.style.display = 'block';
-                subBtn.style.color = 'var(--accent)';
-                subBtn.style.borderBottomColor = 'var(--accent)';
-                profileBtn.style.color = 'var(--text-muted)';
-                profileBtn.style.borderBottomColor = 'transparent';
-            }
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('mobile-open');
+            overlay.classList.toggle('active');
         }
 
         async function saveSettings() {

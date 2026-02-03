@@ -32,10 +32,16 @@
             background: var(--bg-card);
             padding: 40px;
             border-radius: 12px;
-            width: 100%;
+            width: 90%;
             max-width: 400px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             border: 1px solid var(--border);
+        }
+
+        @media screen and (max-width: 480px) {
+            .login-card {
+                padding: 25px;
+            }
         }
 
         .logo {
@@ -162,6 +168,12 @@
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             const errorEl = document.getElementById('error-msg');
+
+            if (password.length < 7) {
+                errorEl.innerText = 'Password must be at least 7 characters long.';
+                errorEl.style.display = 'block';
+                return;
+            }
 
             try {
                 const res = await fetch('/register/', {
