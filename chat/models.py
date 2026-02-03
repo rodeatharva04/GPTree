@@ -9,7 +9,7 @@ class UserProfile(models.Model):
     personal_prompt = models.TextField(blank=True, help_text="Custom instructions for the AI")
 
     def __str__(self):
-        return self.user.username
+        return self.user.email
 
 class EmailVerification(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='verification')

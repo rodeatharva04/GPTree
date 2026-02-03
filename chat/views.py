@@ -50,20 +50,19 @@ def index(request):
 def register_view(request):
     if request.method == 'POST':
         data = json.loads(request.body)
-        username = data.get('username')
         email = data.get('email')
         password = data.get('password')
 
         if len(password) < 7:
             return JsonResponse({'error': 'Password must be at least 7 characters long'}, status=400)
 
-        existing_user = User.objects.filter(username=username).first()
+        # Check for existing user by email
+        existing_user = User.objects.filter(email=email).first()
         if existing_user:
             if existing_user.is_active:
-                return JsonResponse({'error': 'Username already exists'}, status=400)
+                return JsonResponse({'error': 'An account with this email already exists'}, status=400)
             else:
                 # Re-use inactive user: update details and send new OTP
-                existing_user.email = email
                 existing_user.set_password(password)
                 existing_user.save()
                 user = existing_user
@@ -71,7 +70,8 @@ def register_view(request):
                 # Update or create verification record
                 verification, _ = EmailVerification.objects.get_or_create(user=user)
         else:
-            user = User.objects.create_user(username=username, email=email, password=password)
+            # Use email as the username for Django internals
+            user = User.objects.create_user(username=email, email=email, password=password)
             user.is_active = False
             user.save()
             UserProfile.objects.create(user=user)
@@ -117,9 +117,12 @@ def verify_otp(request):
 def login_view(request):
     if request.method == 'POST':
         data = json.loads(request.body)
-        username = data.get('username')
+        email = data.get('email')
         password = data.get('password')
-        user = authenticate(request, username=username, password=password)
+        
+        # Django's authentication expects 'username'. We use email as username.
+        user = authenticate(request, username=email, password=password)
+        
         if user is not None:
             if user.is_active:
                 login(request, user)
@@ -127,7 +130,7 @@ def login_view(request):
             else:
                 return JsonResponse({'error': 'Account not verified', 'user_id': user.id}, status=403)
         else:
-            return JsonResponse({'error': 'Invalid credentials'}, status=401)
+            return JsonResponse({'error': 'Invalid email or password'}, status=401)
     return render(request, 'chat/login.html')
 
 @csrf_exempt
