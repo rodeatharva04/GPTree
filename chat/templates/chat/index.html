@@ -1167,10 +1167,11 @@
             }
         }
 
-        async function loadConversation(id, updateHistory = true) {
+        async function loadConversation(id, updateHistory = true, forceBottom = false) {
             // Save scroll of previous active node
             const cPane = document.getElementById('current-pane');
             if (activeNodeId) {
+                // Do not overwrite with 0 if we are just switching quickly? No, always save.
                 scrollPositions[activeNodeId] = cPane.scrollTop;
                 localStorage.setItem('gptree_scroll_positions', JSON.stringify(scrollPositions));
             }
@@ -1282,10 +1283,13 @@
                 const cPaneInstant = document.getElementById('current-pane');
                 const pPaneInstant = document.getElementById('parent-pane');
 
-                if (scrollPositions[id] !== undefined) {
+                if (forceBottom) {
+                    cPaneInstant.scrollTop = cPaneInstant.scrollHeight;
+                } else if (scrollPositions[id] !== undefined) {
                     cPaneInstant.scrollTop = scrollPositions[id];
                 } else {
-                    cPaneInstant.scrollTop = cPaneInstant.scrollHeight;
+                    // Default to TOP for new opens so user sees the start of content
+                    cPaneInstant.scrollTop = 0;
                 }
 
                 if (showContext) {
@@ -1397,7 +1401,7 @@
                     body: formData
                 });
 
-                await loadConversation(activeNodeId, false);
+                await loadConversation(activeNodeId, false, true);
 
                 const aiRes = await fetch(`/api/conversations/${activeNodeId}/generate_reply/`, {
                     method: 'POST'
@@ -1408,7 +1412,7 @@
                     appendErrorMessage("AI Error: " + (err.error || "Unknown"));
                 }
 
-                await loadConversation(activeNodeId, false);
+                await loadConversation(activeNodeId, false, true);
 
             } catch (e) {
                 console.error(e);
@@ -1558,7 +1562,7 @@
                 });
                 const data = await res.json();
                 await loadTree();
-                loadConversation(data.id);
+                loadConversation(data.id, true, true);
             }
         }
 
@@ -1611,7 +1615,7 @@
                 });
                 const data = await res.json();
                 await loadTree();
-                loadConversation(data.id);
+                loadConversation(data.id, true, true);
             }
         }
 
