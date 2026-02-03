@@ -11,13 +11,14 @@ import json
 import os
 import requests
 from PIL import Image
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 
 # Initialize Gemini
 api_key = getattr(settings, 'GOOGLE_API_KEY', None) or os.environ.get("GOOGLE_API_KEY")
-
-if api_key and genai:
-    genai.configure(api_key=api_key)
+client = None
+if api_key:
+    client = genai.Client(api_key=api_key)
 
 def send_brevo_email(subject, content, to_email):
     """Fallback to HTTP API since SMTP is failing with 535"""
@@ -358,42 +359,49 @@ def generate_reply(request, conversation_id):
             system_instr += f"\n\nUSER PERSONAL INSTRUCTIONS:\n{profile.personal_prompt}"
 
         contents = []
-        contents.append({"role": "user", "parts": [f"[System Note: {system_instr}]"]})
+        # Add system instruction as a user message since new SDK handles system_instructions parameter separately, 
+        # but for simplicity in this tree-context, we'll keep the system note style.
         
         for node in path:
             # Inject Branch Title context
-            contents.append({"role": "user", "parts": [f"[Context: Entering conversation branch named '{node.title}']"]})
+            contents.append(types.Content(role="user", parts=[types.Part.from_text(text=f"[Context: Entering conversation branch named '{node.title}']")]))
             
             node_messages = node.messages.all().order_by('created_at').prefetch_related('files')
             for m in node_messages:
                 role = "user" if m.role == 'user' else "model"
                 parts = []
                 
-                # Add all files (Images for now)
+                # Add all files (Images)
                 for f in m.files.all():
                     try:
-                        # Gemini SDK handles PIL Images for vision
-                        img = Image.open(f.file.path)
-                        parts.append(img)
+                        # With the new SDK, we provide the file path or bytes
+                        with open(f.file.path, 'rb') as file_data:
+                            parts.append(types.Part.from_bytes(data=file_data.read(), mime_type="image/jpeg"))
                     except Exception as img_err:
                         print(f"Error loading file at {f.file.path}: {img_err}")
                 
                 if m.content:
-                    parts.append(m.content)
+                    parts.append(types.Part.from_text(text=m.content))
                 
                 if parts:
-                    contents.append({"role": role, "parts": parts})
+                    contents.append(types.Content(role=role, parts=parts))
 
-        models_to_try = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-pro"]
+        models_to_try = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"]
         ai_text = None
         error_msg = ""
 
         for model_name in models_to_try:
             try:
                 print(f"Attempting to call model: {model_name}")
-                model = genai.GenerativeModel(model_name)
-                generation_config = {"temperature": 0.7, "max_output_tokens": 4096}
-                response = model.generate_content(contents, generation_config=generation_config)
+                response = client.models.generate_content(
+                    model=model_name,
+                    contents=contents,
+                    config=types.GenerateContentConfig(
+                        system_instruction=system_instr,
+                        temperature=0.7,
+                        max_output_tokens=4096,
+                    )
+                )
                 if response and response.text:
                     ai_text = response.text
                     break
