@@ -12,6 +12,7 @@ import os
 import requests
 from PIL import Image
 import threading
+from datetime import datetime
 try:
     from google import genai
     from google.genai import types
@@ -28,8 +29,8 @@ def get_email_html(title, content, warning=None):
     warning_html = ""
     if warning:
         warning_html = f"""
-        <div style="background-color: #1e1e1e; border-left: 4px solid #ff4a4a; padding: 10px; margin: 20px 0; color: #ff4a4a;">
-            <strong>SECURITY ALERT:</strong><br>
+        <div style="background-color: #2a1515; border-left: 4px solid #ff4a4a; padding: 10px; margin: 20px 0; color: #ff8a8a;">
+            <strong style="color: #ff4a4a;">SECURITY ALERT:</strong><br>
             {warning}
         </div>
         """
@@ -39,10 +40,16 @@ def get_email_html(title, content, warning=None):
     <html>
     <body style="margin: 0; padding: 0; background-color: #121212; color: #e0e0e0; font-family: 'Courier New', Courier, monospace;">
         <div style="max-width: 600px; margin: 0 auto; padding: 20px; background-color: #121212;">
-            <div style="border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
-                <div style="width: 30px; height: 30px; background-color: #20b8cd; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: black; font-weight: bold;">G</div>
-                <h2 style="color: #e0e0e0; margin: 0; font-size: 18px;">GPTree System</h2>
-            </div>
+            <table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-bottom: 1px solid #333; margin-bottom: 20px;">
+                <tr>
+                    <td width="40" style="padding-bottom: 10px;">
+                        <div style="width: 30px; height: 30px; background-color: #20b8cd; border-radius: 50%; display: block; text-align: center; line-height: 30px; color: black; font-weight: bold;">G</div>
+                    </td>
+                    <td style="padding-bottom: 10px;">
+                         <h2 style="color: #e0e0e0; margin: 0; font-size: 18px;">GPTree System</h2>
+                    </td>
+                </tr>
+            </table>
             
             <div style="font-size: 14px; line-height: 1.6;">
                 <p style="color: #20b8cd; font-weight: bold; font-size: 16px;">{title}</p>
@@ -55,7 +62,7 @@ def get_email_html(title, content, warning=None):
             <div style="font-size: 11px; color: #666; border-top: 1px solid #333; padding-top: 15px; margin-top: 30px;">
                 This represents an automated security notification from GPTree.<br>
                 Device: Unknown via Web Client<br>
-                Time: {threading.Event().wait(0)} (Just now)
+                Time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
             </div>
         </div>
     </body>
