@@ -1042,7 +1042,11 @@
                 if (!res.ok) throw new Error('Failed to load tree');
                 const data = await res.json();
                 conversations = data;
-                renderTree();
+                if (conversations.length === 0) {
+                    showCreateChatSetup();
+                } else {
+                    renderTree();
+                }
 
                 sidebar.scrollTop = currentScroll; // Restore sidebar scroll
 
@@ -1191,7 +1195,25 @@
 
             try {
                 const res = await fetch(`/api/conversations/${id}/messages/`);
-                if (!res.ok) throw new Error("Error loading messages");
+                if (!res.ok) {
+                    // If chat not found (maybe deleted or wrong user), reset UI
+                    if (res.status === 404 || res.status === 500) {
+                        activeNodeId = null;
+                        localStorage.removeItem('gptree_active_node');
+                        if (conversations.length === 0) {
+                            showCreateChatSetup();
+                        } else {
+                            const inner = document.getElementById('chat-inner');
+                            inner.innerHTML = '<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:var(--text-muted);"><i class="fa fa-search" style="font-size:3em; margin-bottom:20px;"></i><p>Chat not found</p></div>';
+                        }
+                        // Clean URL params
+                        const url = new URL(window.location);
+                        url.searchParams.delete('node');
+                        window.history.pushState({}, '', url);
+                        return;
+                    }
+                    throw new Error("Error loading messages");
+                }
                 const messagesList = await res.json();
 
                 inner.innerHTML = '';
@@ -1524,16 +1546,59 @@
         // Initial load
         loadSidebarProfile();
 
-        async function createNewRoot() {
-            const title = prompt("Enter chat title:", "New Topic");
+        async function createNewRoot(title = null) {
+            if (!title) {
+                title = prompt("Enter chat title:", "New Topic");
+            }
             if (title) {
                 const res = await fetch('/api/conversations/', {
                     method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ title: title })
                 });
                 const data = await res.json();
                 await loadTree();
                 loadConversation(data.id);
+            }
+        }
+
+        function showCreateChatSetup() {
+            const inner = document.getElementById('chat-inner');
+            inner.innerHTML = `
+                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-main);">
+                    <div style="text-align: center; max-width: 400px; padding: 40px; background: var(--bg-sidebar); border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+                        <i class="fa fa-comments" style="font-size: 3em; color: var(--accent); margin-bottom: 20px;"></i>
+                        <h2 style="margin: 0 0 10px 0;">Welcome to GPTree</h2>
+                        <p style="color: var(--text-muted); margin-bottom: 30px;">Start your first conversation tree.</p>
+                        
+                        <div style="display: flex; gap: 10px;">
+                            <input type="text" id="new-chat-title" placeholder="Enter topic..." 
+                                style="flex: 1; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: #1a1a1a; color: white; outline: none;">
+                            <button onclick="triggerNewChat()" 
+                                style="padding: 12px 20px; background: var(--accent); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                                Start
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Focus input
+            setTimeout(() => {
+                const input = document.getElementById('new-chat-title');
+                if (input) {
+                    input.focus();
+                    input.addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter') triggerNewChat();
+                    });
+                }
+            }, 100);
+        }
+
+        function triggerNewChat() {
+            const title = document.getElementById('new-chat-title').value;
+            if (title && title.trim() !== "") {
+                createNewRoot(title);
             }
         }
 
