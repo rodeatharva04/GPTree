@@ -7,7 +7,10 @@
     <title>GPTree</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <style>
         :root {
             --bg-body: #191919;
@@ -563,10 +566,61 @@
         .message-text {
             white-space: pre-wrap;
             color: #d1d5db;
-            line-height: 1.5;
-            /* slightly reduced from default */
+            line-height: 1.6;
             font-size: 0.95em;
-            /* slightly smaller text */
+        }
+
+        /* Code Blocks */
+        pre {
+            background: #0d0d0d !important;
+            border-radius: 8px;
+            margin: 10px 0;
+            position: relative;
+            border: 1px solid #333;
+            overflow: hidden;
+        }
+
+        code {
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9em;
+        }
+
+        .code-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #2d2d2d;
+            padding: 6px 12px;
+            font-size: 0.8em;
+            color: #b0b0b0;
+            border-bottom: 1px solid #333;
+        }
+
+        .code-lang {
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .copy-code-btn {
+            background: transparent;
+            border: none;
+            color: #b0b0b0;
+            cursor: pointer;
+            font-size: 0.8em;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: color 0.2s;
+        }
+
+        .copy-code-btn:hover {
+            color: white;
+        }
+
+        pre code.hljs {
+            padding: 12px;
+            display: block;
+            overflow-x: auto;
         }
 
         /* Input Area */
@@ -1470,6 +1524,45 @@
             } else {
                 container.style.display = 'none';
             }
+        }
+
+        // Markdown Configuration
+        const renderer = new marked.Renderer();
+        renderer.code = function (code, language) {
+            const validLang = !!(language && hljs.getLanguage(language));
+            const highlighted = validLang ? hljs.highlight(code, { language }).value : hljs.highlightAuto(code).value;
+            const langClass = validLang ? language : 'plaintext';
+
+            return `
+            <div class="code-block-wrapper">
+                <pre><div class="code-header">
+                    <span class="code-lang">${langClass}</span>
+                    <button class="copy-code-btn" onclick="copyCode(this)">
+                        <i class="fa fa-copy"></i> Copy
+                    </button>
+                </div><code class="hljs ${langClass}">${highlighted}</code></pre>
+            </div>`;
+        };
+
+        marked.setOptions({
+            renderer: renderer,
+            highlight: function (code, lang) {
+                const language = hljs.getLanguage(lang) ? lang : 'plaintext';
+                return hljs.highlight(code, { language }).value;
+            },
+            langPrefix: 'hljs language-'
+        });
+
+        function copyCode(btn) {
+            const pre = btn.closest('pre');
+            const code = pre.querySelector('code').innerText;
+            navigator.clipboard.writeText(code).then(() => {
+                const original = btn.innerHTML;
+                btn.innerHTML = '<i class="fa fa-check"></i> Copied!';
+                setTimeout(() => {
+                    btn.innerHTML = original;
+                }, 2000);
+            });
         }
 
         // Account Settings
