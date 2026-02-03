@@ -1025,10 +1025,16 @@
             });
 
             // Save chat scroll position in real-time
+            // Save chat scroll position with throttling and safety check
+            let scrollTimeout;
             cPane.addEventListener('scroll', () => {
-                if (activeNodeId) {
-                    scrollPositions[activeNodeId] = cPane.scrollTop;
-                    localStorage.setItem('gptree_scroll_positions', JSON.stringify(scrollPositions));
+                if (activeNodeId && !ignoreScrollUpdates) {
+                    if (scrollTimeout) return;
+                    scrollTimeout = setTimeout(() => {
+                        scrollPositions[activeNodeId] = cPane.scrollTop;
+                        localStorage.setItem('gptree_scroll_positions', JSON.stringify(scrollPositions));
+                        scrollTimeout = null;
+                    }, 100);
                 }
             });
         }
@@ -1167,11 +1173,15 @@
             }
         }
 
+        let ignoreScrollUpdates = false;
+
         async function loadConversation(id, updateHistory = true, forceBottom = false) {
-            // Save scroll of previous active node
+            // Disable scroll saving while we switch (prevents saving 0 when clearing view)
+            ignoreScrollUpdates = true;
+
+            // Save scroll of previous active node ONE LAST TIME to be sure
             const cPane = document.getElementById('current-pane');
             if (activeNodeId) {
-                // Do not overwrite with 0 if we are just switching quickly? No, always save.
                 scrollPositions[activeNodeId] = cPane.scrollTop;
                 localStorage.setItem('gptree_scroll_positions', JSON.stringify(scrollPositions));
             }
@@ -1296,9 +1306,13 @@
                     pPaneInstant.scrollTop = pPaneInstant.scrollHeight;
                 }
 
+                // Re-enable scroll saving after a short delay to let layout stabilize
+                setTimeout(() => { ignoreScrollUpdates = false; }, 150);
+
             } catch (e) {
                 console.error(e);
                 inner.innerHTML = '<div style="color:red; text-align:center;">Failed to load messages</div>';
+                ignoreScrollUpdates = false;
             }
         }
 
