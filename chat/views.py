@@ -324,7 +324,7 @@ def generate_reply(request, conversation_id):
         path.reverse()
         
         profile, _ = UserProfile.objects.get_or_create(user=request.user)
-        system_instr = "You are a helpful AI assistant in GPTree."
+        system_instr = "You are a helpful AI assistant in GPTree. IMPORTANT: Do not use emojis in your responses. Keep a professional and clean tone."
         if profile.personal_prompt:
             system_instr += f"\n\nUSER PERSONAL INSTRUCTIONS:\n{profile.personal_prompt}"
 

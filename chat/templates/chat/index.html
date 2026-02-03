@@ -1270,7 +1270,7 @@
 
             const roleLabel = document.createElement('div');
             roleLabel.className = `role-label`;
-            const icon = msg.role === 'user' ? 'fa-user' : 'fa-robot';
+            const icon = msg.role === 'user' ? 'fa-user' : 'fa-terminal';
             roleLabel.innerHTML = `<i class="fa ${icon}"></i> ${msg.role === 'user' ? 'You' : 'AI'}`;
             header.appendChild(roleLabel);
 
@@ -1404,7 +1404,7 @@
                 selectedFiles.forEach((file, index) => {
                     const badge = document.createElement('div');
                     badge.className = 'file-badge';
-                    badge.innerHTML = `<span>📎 ${file.name}</span> <i class="fa fa-times remove-file" onclick="removeFile(${index})"></i>`;
+                    badge.innerHTML = `<span><i class="fa fa-paperclip"></i> ${file.name}</span> <i class="fa fa-times remove-file" onclick="removeFile(${index})"></i>`;
                     container.appendChild(badge);
                 });
             } else {
