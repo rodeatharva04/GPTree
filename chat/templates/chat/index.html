@@ -1391,12 +1391,18 @@
                 await fetch(`/api/conversations/${id}/`, {
                     method: 'DELETE'
                 });
-                if (activeNodeId == id) {
+                await loadTree(); // Reload tree first to update 'conversations'
+
+                // If active node is the one deleted OR no longer exists in tree, reset UI
+                if (activeNodeId == id || !conversations.find(c => c.id == activeNodeId)) {
                     activeNodeId = null;
                     localStorage.removeItem('gptree_active_node');
-                    document.getElementById('chat-inner').innerHTML = '<div class="empty-state"><h2>Deleted</h2></div>';
+                    document.getElementById('chat-inner').innerHTML = '<div class="empty-state"><h2>Select a chat</h2><p>The previous chat was deleted.</p></div>';
+                    document.getElementById('chat-breadcrumb').innerHTML = '';
+                    const url = new URL(window.location);
+                    url.searchParams.delete('node');
+                    window.history.pushState({}, '', url);
                 }
-                loadTree();
             }
         }
         async function logout() {
