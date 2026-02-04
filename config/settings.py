@@ -23,7 +23,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-ie(asc02f0)rl!pez+83@t&j=crg@ul41x4922a1)%t&*&d!lu")
+SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-placeholder-key-change-in-production")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get("DEBUG", "False") == "True"
@@ -140,7 +140,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "AIzaSyA1i5IMdoBuIqO_ppukFQ-GbHUO8EIxWSQ")
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
 # Email Settings
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
@@ -148,7 +148,7 @@ EMAIL_HOST = 'smtp-relay.brevo.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'sysmora.work@gmail.com'
-EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", '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')
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
 DEFAULT_FROM_EMAIL = 'sysmora.work@gmail.com'
 
 LOGIN_URL = 'login'
