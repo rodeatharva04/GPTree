@@ -86,6 +86,8 @@ def send_brevo_email(subject, html_content, to_email):
     }
     try:
         response = requests.post(url, json=payload, headers=headers)
+        if response.status_code not in [201, 202, 200]:
+            print(f"Brevo API Failed: {response.status_code} - {response.text}")
         return response.status_code in [201, 202, 200]
     except Exception as e:
         print(f"Brevo API Error: {e}")
