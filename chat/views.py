@@ -263,9 +263,21 @@ def update_user_settings(request):
             profile.personal_prompt = personal_prompt
         if profile_pic:
             profile.profile_pic = profile_pic
+        elif request.POST.get('remove_profile_pic') == 'true':
+            profile.profile_pic = None
         
         profile.save()
         return JsonResponse({'status': 'ok'})
+
+@csrf_exempt
+@login_required
+def delete_account_view(request):
+    if request.method == 'DELETE':
+        user = request.user
+        logout(request) # Logout before deleting to clear session
+        user.delete()
+        return JsonResponse({'status': 'ok'})
+    return JsonResponse({'error': 'Method not allowed'}, status=405)
 
 @csrf_exempt
 def logout_view(request):

@@ -373,24 +373,27 @@
         }
 
         .chat-inner {
-            max-width: 900px;
+            max-width: 1000px;
             margin: 0 auto;
-            padding: 10px 20px 40px 20px;
+            padding: 10px 10px 40px 10px;
             /* Tighter top, room for bottom */
             width: 100%;
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 8px;
+            /* Reduced gap */
         }
 
         .message-group {
-            max-width: 800px;
-            /* reduced from 85% for compactness */
-            padding: 8px 12px;
-            /* reduced padding */
-            border: 1px solid transparent;
-            transition: all 0.2s;
+            width: fit-content;
+            min-width: 120px;
+            max-width: 85%;
+            padding: 12px 16px;
+            /* Comfortable padding */
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
             position: relative;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
         .message-node-ref {
@@ -431,6 +434,83 @@
         .file-badge i.remove-file:hover {
             opacity: 1;
             color: #ff4a4a;
+        }
+
+        /* Clean Boxed Code Blocks */
+        .code-block-wrapper {
+            background: #1e1e2e;
+            margin: 10px 0;
+            width: 100%;
+            border-radius: 8px;
+            /* Rounded corners */
+            border: 1px solid #313244;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .message-text>.code-block-wrapper:first-child {
+            margin-top: 0;
+        }
+
+        /* First child code block needs top radius to match bubble? No, keeping it simple strip style */
+
+        .code-header {
+            background: #11111b;
+            padding: 6px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #313244;
+        }
+
+        /* Removed mac dots styles */
+        .code-lang {
+            font-family: 'Consolas', monospace;
+            font-size: 0.75em;
+            color: #cba6f7;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .code-lang {
+            font-family: 'Consolas', monospace;
+            font-size: 0.75em;
+            color: #cba6f7;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        pre {
+            margin: 0 !important;
+            border: none !important;
+            background: transparent !important;
+        }
+
+        code.hljs {
+            padding: 12px 16px !important;
+            font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+            line-height: 1.5;
+            font-size: 0.9em;
+            background: transparent !important;
+        }
+
+        .copy-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: #ccc;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.75em;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .copy-btn:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.2);
         }
 
         /* Modal Settings */
@@ -493,16 +573,25 @@
 
         .role-user {
             background: rgba(32, 184, 205, 0.12);
-            align-self: flex-end;
+            align-self: flex-end !important;
+            /* Force right alignment */
+            margin-left: auto;
+            /* Push to right */
             border-radius: 18px 18px 4px 18px;
             border-color: rgba(32, 184, 205, 0.2);
+            text-align: left;
+            /* Keep text readable */
         }
 
         .role-ai {
             background: rgba(255, 255, 255, 0.04);
-            align-self: flex-start;
+            align-self: flex-start !important;
+            /* Force left alignment */
+            margin-right: auto;
+            /* Push to left */
             border-radius: 18px 18px 18px 4px;
             border-color: rgba(255, 255, 255, 0.08);
+            text-align: left;
         }
 
         .message-group:hover {
@@ -514,7 +603,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 8px;
+            margin-bottom: 0px;
+            /* Minimal margin */
         }
 
         .message-meta {
@@ -566,8 +656,16 @@
         .message-text {
             white-space: pre-wrap;
             color: #d1d5db;
-            line-height: 1.6;
+            line-height: 1.5;
             font-size: 0.95em;
+        }
+
+        .message-text p {
+            margin: 0;
+        }
+
+        .message-text p:not(:last-child) {
+            margin-bottom: 6px;
         }
 
         /* Code Blocks */
@@ -625,7 +723,7 @@
 
         /* Input Area */
         .input-area {
-            padding: 24px;
+            padding: 12px;
             background: var(--bg-body);
             border-top: 1px solid var(--border);
             display: flex;
@@ -634,7 +732,7 @@
 
         .input-wrapper {
             width: 100%;
-            max-width: 800px;
+            max-width: 1000px;
             position: relative;
         }
 
@@ -839,8 +937,13 @@
                         <img id="settings-avatar-img" src="" class="settings-avatar" alt="Avatar">
                         <input type="file" id="settings-avatar-input" style="display:none" accept="image/*"
                             onchange="previewAvatar(event)">
-                        <button class="action-btn" onclick="document.getElementById('settings-avatar-input').click()"><i
-                                class="fa fa-camera"></i> Change Picture</button>
+                        <div style="display:flex; gap:10px;">
+                            <button class="action-btn"
+                                onclick="document.getElementById('settings-avatar-input').click()"><i
+                                    class="fa fa-camera"></i> Change</button>
+                            <button class="action-btn" onclick="removeProfilePic()" title="Remove/Default"><i
+                                    class="fa fa-trash"></i></button>
+                        </div>
                     </div>
                     <div class="form-group" style="margin-bottom: 15px;">
                         <label style="display:block; margin-bottom:8px; color:var(--text-muted); font-size:0.85em;">Full
@@ -856,14 +959,24 @@
                             style="width:100%; height:100px; padding:12px; background:#2A2B32; border:1px solid var(--border); border-radius:8px; color:white; outline:none; font-family:inherit; resize:none;"
                             placeholder="Instructions for the AI..."></textarea>
                     </div>
-                    <div style="display:flex; gap:12px;">
+                    <div style="display:flex; gap:12px; margin-bottom: 20px;">
                         <button class="btn"
                             style="flex:1; padding:12px; background:var(--accent); border:none; border-radius:8px; color:white; font-weight:600; cursor:pointer;"
                             onclick="saveSettings()">Save Changes</button>
                         <button class="btn"
                             style="padding:12px; background:rgba(255, 74, 74, 0.1); border:1px solid rgba(255, 74, 74, 0.2); border-radius:8px; color:#ff4a4a; font-weight:600; cursor:pointer;"
-                            onclick="logout()">
+                            onclick="logout()" title="Logout">
                             <i class="fa fa-sign-out-alt"></i>
+                        </button>
+                    </div>
+
+                    <div style="border-top: 1px solid var(--border); padding-top: 20px;">
+                        <h4 style="margin: 0 0 10px 0; color: #ff4a4a; font-size: 0.9em;">Danger Zone</h4>
+                        <button class="btn"
+                            style="width: 100%; padding: 10px; background: transparent; border: 1px solid #ff4a4a; border-radius: 8px; color: #ff4a4a; font-size: 0.9em; cursor: pointer; transition: background 0.2s;"
+                            onmouseover="this.style.background='rgba(255, 74, 74, 0.1)'"
+                            onmouseout="this.style.background='transparent'" onclick="deleteAccount()">
+                            Delete Account
                         </button>
                     </div>
                 </div>
@@ -923,7 +1036,7 @@
     <script>
         let conversations = [];
         let activeNodeId = localStorage.getItem('gptree_active_node') || null;
-        let showContext = false;
+        let contextStates = JSON.parse(localStorage.getItem('gptree_context_states') || '{}');
         let scrollPositions = JSON.parse(localStorage.getItem('gptree_scroll_positions') || '{}');
 
         // Configure Marked.js for Code Copy Buttons
@@ -932,19 +1045,32 @@
 
         renderer.code = function (token) {
             const code = token.text;
-            const lang = token.lang || 'code';
-            const escapedCode = code.replace(/"/g, '&quot;');
+            const lang = token.lang || '';
+            const escapedCode = code.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, '\\n');
+
+            let highlighted = '';
+            // Simple robust highlighting
+            try {
+                if (lang && hljs.getLanguage(lang)) {
+                    highlighted = hljs.highlight(code, { language: lang }).value;
+                } else {
+                    highlighted = hljs.highlightAuto(code).value;
+                }
+            } catch (e) {
+                highlighted = code; // Fallback
+            }
+
             const id = 'code-' + Math.random().toString(36).substr(2, 9);
 
             return `
                 <div class="code-block-wrapper">
                     <div class="code-header">
-                        <span>${lang}</span>
-                        <button class="copy-btn" onclick="copyToClipboard(this, \`${id}\`)">
-                            <i class="fa fa-copy"></i> Copy
+                        <span class="code-lang">${lang || 'text'}</span>
+                        <button class="copy-btn" onclick="doCopy(this, '${escapedCode}')">
+                            <i class="fa fa-copy"></i>
                         </button>
                     </div>
-                    <pre><code id="${id}">${code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</code></pre>
+                    <pre><code class="hljs ${lang}">${highlighted}</code></pre>
                 </div>
             `;
         };
@@ -1098,14 +1224,14 @@
                 const sidebar = document.getElementById('tree-root');
                 const currentScroll = sidebar.scrollTop; // Save sidebar scroll
 
-                const res = await fetch('/api/tree/');
+                const res = await fetch(`/api/tree/?t=${Date.now()}`); // Add timestamp to prevent caching
                 if (!res.ok) throw new Error('Failed to load tree');
                 const data = await res.json();
                 conversations = data;
+                renderTree(); // Always render the tree (even if empty)
+
                 if (conversations.length === 0) {
                     showCreateChatSetup();
-                } else {
-                    renderTree();
                 }
 
                 sidebar.scrollTop = currentScroll; // Restore sidebar scroll
@@ -1119,7 +1245,11 @@
                     // Try to restore from activeNodeId if it's valid
                     if (conversations.find(c => c.id == activeNodeId)) {
                         loadConversation(activeNodeId, false);
+                    } else {
+                        showCreateChatSetup();
                     }
+                } else {
+                    showCreateChatSetup();
                 }
             } catch (e) {
                 console.error(e);
@@ -1147,6 +1277,9 @@
             rootEl.innerHTML = '';
             const treeData = buildTreeStructure(conversations);
 
+            // Sort roots by latest first (descending by created_at)
+            treeData.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
             function createNodeEl(node) {
                 const container = document.createElement('div');
                 container.className = 'tree-node';
@@ -1157,7 +1290,7 @@
                 content.id = `node-${node.id}`;
                 content.onclick = (e) => {
                     if (!e.target.closest('.action-btn')) {
-                        showContext = false; // Reset context view on new node click
+                        // showContext = false; // Removed to persist view state
                         loadConversation(node.id);
                     }
                 };
@@ -1265,12 +1398,7 @@
                     if (res.status === 404 || res.status === 500) {
                         activeNodeId = null;
                         localStorage.removeItem('gptree_active_node');
-                        if (conversations.length === 0) {
-                            showCreateChatSetup();
-                        } else {
-                            const inner = document.getElementById('chat-inner');
-                            inner.innerHTML = '<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:var(--text-muted);"><i class="fa fa-search" style="font-size:3em; margin-bottom:20px;"></i><p>Chat not found</p></div>';
-                        }
+                        showCreateChatSetup();
                         // Clean URL params
                         const url = new URL(window.location);
                         url.searchParams.delete('node');
@@ -1313,6 +1441,7 @@
                 const hResizer = document.getElementById('history-resizer');
 
                 // Toggle logic
+                const showContext = !!contextStates[id];
                 if (showContext && parentMessages.length > 0) {
                     pPane.style.display = 'block';
                     hResizer.style.display = 'block';
@@ -1356,7 +1485,7 @@
                     cPaneInstant.scrollTop = 0;
                 }
 
-                if (showContext) {
+                if (!!contextStates[id]) {
                     pPaneInstant.scrollTop = pPaneInstant.scrollHeight;
                 }
 
@@ -1371,40 +1500,23 @@
         }
 
         function toggleParentHistory() {
-            showContext = !showContext;
-            loadConversation(activeNodeId, false);
+            if (activeNodeId) {
+                contextStates[activeNodeId] = !contextStates[activeNodeId];
+                localStorage.setItem('gptree_context_states', JSON.stringify(contextStates));
+                loadConversation(activeNodeId, false);
+            }
         }
 
         function renderMessageGroup(msg, isContext) {
             const group = document.createElement('div');
             group.className = `message-group role-${msg.role}` + (isContext ? ' context-message' : '');
 
-            const header = document.createElement('div');
-            header.className = 'message-header';
-
-            const roleLabel = document.createElement('div');
-            roleLabel.className = `role-label`;
-            const icon = msg.role === 'user' ? 'fa-user' : 'fa-terminal';
-            roleLabel.innerHTML = `<i class="fa ${icon}"></i> ${msg.role === 'user' ? 'You' : 'AI'}`;
-            header.appendChild(roleLabel);
-
-            const meta = document.createElement('div');
-            meta.className = 'message-meta';
-
-            const copyBtn = document.createElement('button');
-            copyBtn.className = 'msg-copy-btn';
-            copyBtn.innerHTML = '<i class="fa fa-copy"></i>';
-            copyBtn.title = 'Copy message';
-            copyBtn.onclick = (e) => copyMessage(copyBtn, msg.content);
-            meta.appendChild(copyBtn);
-
-            const time = document.createElement('span');
-            time.className = 'message-time';
-            time.innerText = msg.created_at || '';
-            meta.appendChild(time);
-
-            header.appendChild(meta);
-            group.appendChild(header);
+            // Removed header and meta from top
+            // const header = document.createElement('div');
+            // header.className = 'message-header';
+            // ... header.appendChild(roleLabel);
+            // group.appendChild(header); 
+            // We skip header entirely to save space
 
             if (msg.node_title) {
                 const ref = document.createElement('div');
@@ -1435,6 +1547,24 @@
             content.appendChild(text);
 
             group.appendChild(content);
+
+            // Add footer with time and copy
+            const footer = document.createElement('div');
+            footer.className = 'message-footer';
+            footer.style = "display: flex; gap: 10px; justify-content: flex-end; align-items: center; margin-top: 4px; opacity: 0.5; font-size: 0.7em;";
+
+            const copyBtn = document.createElement('button');
+            copyBtn.className = 'msg-copy-btn';
+            copyBtn.innerHTML = '<i class="fa fa-copy"></i>';
+            copyBtn.onclick = (e) => copyMessage(copyBtn, msg.content);
+            footer.appendChild(copyBtn);
+
+            const time = document.createElement('span');
+            time.innerText = msg.created_at || '';
+            footer.appendChild(time);
+
+            group.appendChild(footer);
+
             return group;
         }
 
@@ -1526,48 +1656,12 @@
             }
         }
 
-        // Markdown Configuration
-        const renderer = new marked.Renderer();
-        renderer.code = function (code, language) {
-            const validLang = !!(language && hljs.getLanguage(language));
-            const highlighted = validLang ? hljs.highlight(code, { language }).value : hljs.highlightAuto(code).value;
-            const langClass = validLang ? language : 'plaintext';
 
-            return `
-            <div class="code-block-wrapper">
-                <pre><div class="code-header">
-                    <span class="code-lang">${langClass}</span>
-                    <button class="copy-code-btn" onclick="copyCode(this)">
-                        <i class="fa fa-copy"></i> Copy
-                    </button>
-                </div><code class="hljs ${langClass}">${highlighted}</code></pre>
-            </div>`;
-        };
-
-        marked.setOptions({
-            renderer: renderer,
-            highlight: function (code, lang) {
-                const language = hljs.getLanguage(lang) ? lang : 'plaintext';
-                return hljs.highlight(code, { language }).value;
-            },
-            langPrefix: 'hljs language-'
-        });
-
-        function copyCode(btn) {
-            const pre = btn.closest('pre');
-            const code = pre.querySelector('code').innerText;
-            navigator.clipboard.writeText(code).then(() => {
-                const original = btn.innerHTML;
-                btn.innerHTML = '<i class="fa fa-check"></i> Copied!';
-                setTimeout(() => {
-                    btn.innerHTML = original;
-                }, 2000);
-            });
-        }
 
         // Account Settings
         async function openSettings() {
             try {
+                shouldRemoveProfilePic = false; // Reset flag
                 const res = await fetch('/api/settings/');
                 const data = await res.json();
 
@@ -1594,12 +1688,27 @@
         function previewAvatar(event) {
             const file = event.target.files[0];
             if (file) {
+                shouldRemoveProfilePic = false; // If new file selected, don't remove
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     document.getElementById('settings-avatar-img').src = e.target.result;
                 };
                 reader.readAsDataURL(file);
             }
+        }
+
+        // Global flag for removing profile pic
+        let shouldRemoveProfilePic = false;
+
+        function removeProfilePic() {
+            shouldRemoveProfilePic = true;
+            document.getElementById('settings-avatar-input').value = ''; // Clear file input
+            // Show placeholder (using email from hidden store or just generic)
+            // We can re-use the generic generation using current email input value as fallback
+            const email = document.querySelector('#sidebar-avatar-placeholder').innerText || "U";
+            // For preview, we can just use a generic colored block or try UI avatars if we have email
+            // But getting email variable might be tricky here, so we'll just use the UI avatar with 'User'
+            document.getElementById('settings-avatar-img').src = 'https://ui-avatars.com/api/?name=User&background=20b8cd&color=fff';
         }
 
         function toggleSidebar() {
@@ -1618,6 +1727,7 @@
             formData.append('full_name', fullName);
             formData.append('personal_prompt', prompt);
             if (avatarFile) formData.append('profile_pic', avatarFile);
+            if (shouldRemoveProfilePic) formData.append('remove_profile_pic', 'true');
 
             try {
                 const res = await fetch('/api/settings/update/', {
@@ -1706,10 +1816,26 @@
             }, 100);
         }
 
-        function triggerNewChat() {
-            const title = document.getElementById('new-chat-title').value;
+        async function triggerNewChat() {
+            const btn = document.querySelector('button[onclick="triggerNewChat()"]');
+            const titleInput = document.getElementById('new-chat-title');
+            const title = titleInput.value;
+
             if (title && title.trim() !== "") {
-                createNewRoot(title);
+                if (btn) {
+                    if (btn.disabled) return; // Prevent double submission
+                    btn.disabled = true;
+                    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i>';
+                }
+                try {
+                    await createNewRoot(title);
+                } catch (e) {
+                    console.error(e);
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerText = 'Start';
+                    }
+                }
             }
         }
 
@@ -1762,6 +1888,45 @@
                 const res = await fetch('/logout/', { method: 'POST' });
                 window.location.href = '/login/';
             }
+        }
+    </script>
+    <script>
+        async function deleteAccount() {
+            const confirmMsg = "WARNING: This will permanently delete your account, including all chats and uploaded files. This action CANNOT be undone.\n\nType 'DELETE' to confirm:";
+            const response = prompt(confirmMsg);
+            if (response === 'DELETE') {
+                try {
+                    const res = await fetch('/api/account/delete/', {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRFToken': getCookie('csrftoken') // Ensure CSRF if needed, though we are using csrf_exempt on view for simplicity in this context, but best to be safe if auth cookie is used. Wait, logout_view is used and csrf_exempt.
+                        }
+                    });
+                    if (res.ok) {
+                        window.location.href = '/login/';
+                    } else {
+                        alert("Failed to delete account.");
+                    }
+                } catch (e) {
+                    alert("Error deleting account.");
+                }
+            }
+        }
+
+        // Helper for cookies (standard Django)
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
         }
     </script>
 </body>

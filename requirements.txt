@@ -1,4 +1,5 @@
-﻿Django>=5.0
+﻿
+Django>=5.0
 gunicorn
 whitenoise
 google-genai
@@ -10,3 +11,5 @@ certifi
 charset-normalizer
 idna
 urllib3
+dj-database-url
+psycopg2-binary

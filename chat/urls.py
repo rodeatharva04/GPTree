@@ -11,6 +11,7 @@ urlpatterns = [
     path('api/reset_password/', views.reset_password, name='reset_password'),
     path('api/settings/', views.get_user_settings, name='get_settings'),
     path('api/settings/update/', views.update_user_settings, name='update_settings'),
+    path('api/account/delete/', views.delete_account_view, name='delete_account'),
     
     path('api/tree/', views.get_tree, name='get_tree'),
     path('api/conversations/', views.create_conversation, name='create_conversation'),
