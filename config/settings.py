@@ -83,18 +83,20 @@ WSGI_APPLICATION = "config.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-# Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
-# Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": BASE_DIR / "db.sqlite3",
     }
 }
+
+# If running on Railway (or any env with DATABASE_URL), use Postgres
+database_url = os.environ.get("DATABASE_URL")
+if database_url:
+    DATABASES['default'] = dj_database_url.config(default=database_url, conn_max_age=600)
+    print("GPTree Configuration: Using PostgreSQL Database (Release/Production)")
+else:
+    print(f"GPTree Configuration: Using SQLite Database at {BASE_DIR / 'db.sqlite3'} (Local/Dev)")
 
 
 # Password validation
