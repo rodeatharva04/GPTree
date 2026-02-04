@@ -32,9 +32,10 @@ DEBUG = os.environ.get("DEBUG", "False") == "True"
 
 ALLOWED_HOSTS = ['*']
 
-CSRF_TRUSTED_ORIGINS = ['https://*.railway.app']
-
-
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.railway.app',
+    'https://*.up.railway.app',
+]
 
 # Application definition
 
@@ -83,16 +84,17 @@ WSGI_APPLICATION = "config.wsgi.application"
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
+    "default": dj_database_url.config(
+        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
+        conn_max_age=600
+    )
 }
 
-# Only use postgres if DATABASE_URL is present, otherwise keep sqlite (fixes local crash)
-if os.environ.get("DATABASE_URL"):
-    db_from_env = dj_database_url.config(conn_max_age=500)
-    DATABASES['default'].update(db_from_env)
+# Debug logging for database connection
+if 'sqlite' in DATABASES['default']['ENGINE']:
+    print(f"GPTree Configuration: Using SQLite Database at {BASE_DIR / 'db.sqlite3'}")
+else:
+    print("GPTree Configuration: Using PostgreSQL Database")
 
 
 # Password validation
