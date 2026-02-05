@@ -16,7 +16,6 @@ from datetime import datetime
 try:
     from google import genai
     from google.genai import types
-    # Initialize Gemini
     api_key = getattr(settings, 'GOOGLE_API_KEY', None) or os.environ.get("GOOGLE_API_KEY")
     client = None
     if api_key:
@@ -70,8 +69,7 @@ def get_email_html(title, content, warning=None):
     """
 
 def send_brevo_email(subject, html_content, to_email):
-    """Fallback to HTTP API since SMTP is failing with 535"""
-    api_key = getattr(settings, 'EMAIL_HOST_PASSWORD', '')
+    api_key_brevo = getattr(settings, 'EMAIL_HOST_PASSWORD', '')
     url = "https://api.brevo.com/v3/smtp/email"
     payload = {
         "sender": {"name": "GPTree Security", "email": settings.DEFAULT_FROM_EMAIL},
@@ -82,12 +80,10 @@ def send_brevo_email(subject, html_content, to_email):
     headers = {
         "accept": "application/json",
         "content-type": "application/json",
-        "api-key": api_key
+        "api-key": api_key_brevo
     }
     try:
         response = requests.post(url, json=payload, headers=headers)
-        if response.status_code not in [201, 202, 200]:
-            print(f"Brevo API Failed: {response.status_code} - {response.text}")
         return response.status_code in [201, 202, 200]
     except Exception as e:
         print(f"Brevo API Error: {e}")
@@ -107,21 +103,16 @@ def register_view(request):
         if len(password) < 7:
             return JsonResponse({'error': 'Password must be at least 7 characters long'}, status=400)
 
-        # Check for existing user by email
         existing_user = User.objects.filter(email=email).first()
         if existing_user:
             if existing_user.is_active:
                 return JsonResponse({'error': 'An account with this email already exists'}, status=400)
             else:
-                # Re-use inactive user: update details and send new OTP
                 existing_user.set_password(password)
                 existing_user.save()
                 user = existing_user
-                
-                # Update or create verification record
                 verification, _ = EmailVerification.objects.get_or_create(user=user)
         else:
-            # Use email as the username for Django internals
             user = User.objects.create_user(username=email, email=email, password=password)
             user.is_active = False
             user.save()
@@ -130,18 +121,13 @@ def register_view(request):
 
         otp = verification.generate_otp()
         
-        # Send Email in background thread
         def send_async():
             html_body = get_email_html(
                 "Verify Your Identity",
                 f"A request was made to register a new account.<br><br>Your verification OTP is: <strong style='font-size: 1.2em; color: #fff;'>{otp}</strong>",
                 "If you did not initiate this request, someone may be trying to use your email address. No action is required."
             )
-            if not send_brevo_email(
-                'Security Alert: Verify your Email',
-                html_body,
-                email
-            ):
+            if not send_brevo_email('Security Alert: Verify your Email', html_body, email):
                 print(f"Email delivery failed for {email}")
 
         threading.Thread(target=send_async).start()
@@ -178,7 +164,6 @@ def login_view(request):
         email = data.get('email')
         password = data.get('password')
         
-        # Django's authentication expects 'username'. We use email as username.
         user = authenticate(request, username=email, password=password)
         
         if user is not None:
@@ -231,7 +216,7 @@ def reset_password(request):
         if verification.otp == otp:
             user = verification.user
             user.set_password(new_password)
-            user.is_active = True # In case they were resetting while inactive
+            user.is_active = True
             user.save()
             return JsonResponse({'status': 'ok'})
         else:
@@ -276,7 +261,7 @@ def update_user_settings(request):
 def delete_account_view(request):
     if request.method == 'DELETE':
         user = request.user
-        logout(request) # Logout before deleting to clear session
+        logout(request)
         user.delete()
         return JsonResponse({'status': 'ok'})
     return JsonResponse({'error': 'Method not allowed'}, status=405)
@@ -300,7 +285,6 @@ def create_conversation(request):
         title = data.get('title', 'New Chat')
         parent = None
         if parent_id:
-            # Ensure parent belongs to user
             parent = get_object_or_404(Conversation, id=parent_id, user=request.user)
         conv = Conversation.objects.create(title=title, parent=parent, user=request.user)
         return JsonResponse({'id': conv.id, 'title': conv.title, 'parent_id': conv.parent_id})
@@ -342,7 +326,7 @@ def get_messages(request, conversation_id):
                 'content': m.content,
                 'node_id': node.id,
                 'node_title': node.title,
-                'created_at': m.created_at.strftime("%I:%M %p") # 12-hour format
+                'created_at': m.created_at.strftime("%I:%M %p")
             }
             file_urls = [f.file.url for f in m.files.all()]
             msg_dict['file_urls'] = file_urls
@@ -359,7 +343,7 @@ def add_message(request, conversation_id):
         if request.content_type.startswith('multipart/form-data'):
             role = request.POST.get('role', 'user')
             content = request.POST.get('content', '')
-            files = request.FILES.getlist('files') # Support multiple
+            files = request.FILES.getlist('files')
             
             msg = Message.objects.create(
                 conversation=conv,
@@ -383,10 +367,6 @@ def add_message(request, conversation_id):
 @csrf_exempt
 @login_required
 def generate_reply(request, conversation_id):
-    """
-    Generates AI reply using Gemini, with context aware of the tree path.
-    Supports multiple files and uses gemini-2.5-flash as the primary model.
-    """
     if request.method != 'POST':
         return JsonResponse({'error': 'Invalid method'}, status=405)
 
@@ -442,7 +422,7 @@ def generate_reply(request, conversation_id):
                 if parts:
                     contents.append(types.Content(role=role, parts=parts))
 
-        models_to_try = ["gemini-2.5-flash", "gemini-2.5-pro"]
+        models_to_try = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-2.5-flash", "gemini-2.5-pro"]
         ai_text = None
         error_msg = ""
 
@@ -469,6 +449,12 @@ def generate_reply(request, conversation_id):
                 continue
         
         if not ai_text:
+            # Handle Quota Exhausted - User requested to show this in the same message box
+            if "429" in str(error_msg) or "ResourceExhausted" in str(error_msg) or "quota" in str(error_msg).lower():
+                quota_msg = "⚠️ **API Quota Exhausted**\n\nThe system is unable to generate a response because the API quota has been reached. Please check your API key or try again later."
+                Message.objects.create(conversation=conv, role='ai', content=quota_msg)
+                return JsonResponse({'status': 'ok'})
+            
             return JsonResponse({'error': f"AI Error: {error_msg}"}, status=500)
 
         Message.objects.create(conversation=conv, role='ai', content=ai_text)
