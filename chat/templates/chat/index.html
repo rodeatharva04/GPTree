@@ -1534,14 +1534,19 @@
             const content = document.createElement('div');
             content.className = 'message-content';
 
-            if (msg.file_urls && msg.file_urls.length > 0) {
+            if (msg.files && msg.files.length > 0) {
                 const gallery = document.createElement('div');
-                gallery.style = "display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;";
-                msg.file_urls.forEach(url => {
-                    const img = document.createElement('img');
-                    img.src = url;
-                    img.style = "max-width: 200px; max-height: 200px; border-radius: 8px; object-fit: cover; border: 1px solid #333;";
-                    gallery.appendChild(img);
+                gallery.style = "display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;";
+                msg.files.forEach(file => {
+                    const link = document.createElement('a');
+                    link.href = file.url;
+                    link.target = "_blank";
+                    link.className = 'attachment-badge';
+                    link.innerHTML = `<i class="fa fa-file"></i> ${file.name}`;
+                    link.style = "text-decoration: none; background: rgba(32, 184, 205, 0.1); color: var(--accent); padding: 5px 12px; border-radius: 6px; font-size: 0.85em; border: 1px solid rgba(32, 184, 205, 0.2); transition: all 0.2s; display: flex; align-items: center; gap: 6px;";
+                    link.onmouseover = () => { link.style.background = 'rgba(32, 184, 205, 0.2)'; };
+                    link.onmouseout = () => { link.style.background = 'rgba(32, 184, 205, 0.1)'; };
+                    gallery.appendChild(link);
                 });
                 content.appendChild(gallery);
             }

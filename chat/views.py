@@ -331,8 +331,8 @@ def get_messages(request, conversation_id):
                 'node_title': node.title,
                 'created_at': m.created_at.strftime("%I:%M %p")
             }
-            file_urls = [f.file.url for f in m.files.all()]
-            msg_dict['file_urls'] = file_urls
+            files_data = [{'url': f.file.url, 'name': os.path.basename(f.file.name)} for f in m.files.all()]
+            msg_dict['files'] = files_data
             messages.append(msg_dict)
             
     return JsonResponse(messages, safe=False)
