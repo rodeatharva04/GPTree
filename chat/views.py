@@ -13,6 +13,7 @@ import requests
 from PIL import Image
 import threading
 from datetime import datetime
+import mimetypes # Added mimetypes import
 try:
     from google import genai
     from google.genai import types
@@ -353,9 +354,8 @@ def add_message(request, conversation_id):
                 content=content
             )
             for f in files:
-                if not f.content_type.startswith('image/'):
-                    return JsonResponse({'error': 'Only image files are allowed in chat.'}, status=400)
-                MessageFile.objects.create(message=msg, file=f)
+                # Store any file type for the LLM to process
+                MessageFile.objects.create(message=msg, file=f, file_type=f.content_type)
             return JsonResponse({'status': 'ok'})
         else:
             data = json.loads(request.body)
@@ -411,14 +411,16 @@ def generate_reply(request, conversation_id):
                 role = "user" if m.role == 'user' else "model"
                 parts = []
                 
-                # Add all files (Images)
                 for f in m.files.all():
                     try:
-                        # With the new SDK, we provide the file path or bytes
+                        mime_type, _ = mimetypes.guess_type(f.file.path)
+                        if not mime_type:
+                            mime_type = "application/octet-stream"
+                        
                         with open(f.file.path, 'rb') as file_data:
-                            parts.append(types.Part.from_bytes(data=file_data.read(), mime_type="image/jpeg"))
-                    except Exception as img_err:
-                        print(f"Error loading file at {f.file.path}: {img_err}")
+                            parts.append(types.Part.from_bytes(data=file_data.read(), mime_type=mime_type))
+                    except Exception as file_err:
+                        print(f"Error loading file at {f.file.path}: {file_err}")
                 
                 if m.content:
                     parts.append(types.Part.from_text(text=m.content))
