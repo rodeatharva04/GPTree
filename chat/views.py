@@ -426,7 +426,7 @@ def generate_reply(request, conversation_id):
                 if parts:
                     contents.append(types.Content(role=role, parts=parts))
 
-        models_to_try = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-2.5-flash", "gemini-2.5-pro"]
+        models_to_try = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash", "gemini-2.5-pro"]
         ai_text = None
         error_msg = ""
 
