@@ -1705,10 +1705,17 @@
                 document.getElementById('settings-prompt').value = data.personal_prompt || '';
 
                 const avatar = document.getElementById('settings-avatar-img');
+                const placeholderUrl = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(data.email) + '&background=20b8cd&color=fff&bold=true';
+
+                avatar.onerror = function () {
+                    this.src = placeholderUrl;
+                    this.onerror = null; // Prevent infinite loop
+                };
+
                 if (data.profile_pic) {
                     avatar.src = data.profile_pic;
                 } else {
-                    avatar.src = 'https://ui-avatars.com/api/?name=' + data.email + '&background=20b8cd&color=fff';
+                    avatar.src = placeholderUrl;
                 }
 
                 document.getElementById('settings-modal').style.display = 'flex';
@@ -1774,7 +1781,8 @@
                     closeSettings();
                     loadSidebarProfile(); // Refresh sidebar info
                 } else {
-                    alert("Failed to save settings");
+                    const data = await res.json();
+                    alert(data.error || "Failed to save settings");
                 }
             } catch (e) {
                 alert("Error saving settings");
@@ -1791,6 +1799,11 @@
 
                 if (data.profile_pic) {
                     avatar.src = data.profile_pic;
+                    avatar.onerror = function () {
+                        this.style.display = 'none';
+                        placeholder.style.display = 'flex';
+                        this.onerror = null;
+                    };
                     avatar.style.display = 'block';
                     placeholder.style.display = 'none';
                 } else {

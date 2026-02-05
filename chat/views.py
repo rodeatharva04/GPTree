@@ -249,6 +249,8 @@ def update_user_settings(request):
         if personal_prompt is not None:
             profile.personal_prompt = personal_prompt
         if profile_pic:
+            if not profile_pic.content_type.startswith('image/'):
+                return JsonResponse({'error': 'Invalid file type. Only images are allowed.'}, status=400)
             profile.profile_pic = profile_pic
         elif request.POST.get('remove_profile_pic') == 'true':
             profile.profile_pic = None
@@ -351,6 +353,8 @@ def add_message(request, conversation_id):
                 content=content
             )
             for f in files:
+                if not f.content_type.startswith('image/'):
+                    return JsonResponse({'error': 'Only image files are allowed in chat.'}, status=400)
                 MessageFile.objects.create(message=msg, file=f)
             return JsonResponse({'status': 'ok'})
         else:
